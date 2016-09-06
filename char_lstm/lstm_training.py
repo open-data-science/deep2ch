@@ -14,7 +14,6 @@ import lasagne
 import pickle
 from lasagne.nonlinearities import softmax
 
-
 with open('ncollect.txt', 'r') as f:
     in_text = f.read()
 in_text = in_text.replace('\n\n', '\n')
@@ -51,9 +50,9 @@ def gen_data(p, batch_size=BATCH_SIZE, data=in_text, return_target=True):
     for n in range(batch_size):
         ptr = n
         for i in range(SEQ_LENGTH):
-            x[n, i, char_to_ix[data[p+ptr+i]]] = 1.
-        if(return_target):
-            y[n] = char_to_ix[data[p+ptr+SEQ_LENGTH]]
+            x[n, i, char_to_ix[data[p + ptr + i]]] = 1.
+        if (return_target):
+            y[n] = char_to_ix[data[p + ptr + SEQ_LENGTH]]
     return x, np.array(y, dtype='int32')
 
 
@@ -95,17 +94,17 @@ def main(num_epochs=NUM_EPOCHS):
         More general example of generation function is in the application
         script.
         """
-        assert(len(generation_phrase) >= SEQ_LENGTH)
+        assert (len(generation_phrase) >= SEQ_LENGTH)
         sample_ix = []
-        x, _ = gen_data(len(generation_phrase)-SEQ_LENGTH,
-                        1, generation_phrase, 0)
+        x, _ = gen_data(len(generation_phrase) - SEQ_LENGTH,
+                        1, generation_phrase, False)
 
         for i in range(N):
             ix = np.argmax(probs(x).ravel())
             sample_ix.append(ix)
-            x[:, 0:SEQ_LENGTH-1, :] = x[:, 1:, :]
-            x[:, SEQ_LENGTH-1, :] = 0
-            x[0, SEQ_LENGTH-1, sample_ix[-1]] = 1.
+            x[:, 0:SEQ_LENGTH - 1, :] = x[:, 1:, :]
+            x[:, SEQ_LENGTH - 1, :] = 0
+            x[0, SEQ_LENGTH - 1, sample_ix[-1]] = 1.
 
         random_snippet = generation_phrase + ''.join(ix_to_char[ix]
                                                      for ix in sample_ix)
@@ -121,21 +120,22 @@ def main(num_epochs=NUM_EPOCHS):
             for _ in range(PRINT_FREQ):
                 x, y = gen_data(p)
                 p += SEQ_LENGTH + BATCH_SIZE - 1
-                if (p+BATCH_SIZE+SEQ_LENGTH >= data_size):
+                if (p + BATCH_SIZE + SEQ_LENGTH >= data_size):
                     print('Carriage Return')
                     p = 0
 
                 avg_cost += train(x, y)
             print("Epoch {} average loss = {}"
-                  .format(it*1.0*PRINT_FREQ/data_size*BATCH_SIZE,
-                          avg_cost/PRINT_FREQ))
-            netname = 'epoch-{:.5f}.pkl'\
-                      .format(it*1.0*PRINT_FREQ/data_size*BATCH_SIZE)
-            with open('nets/'+netname, 'wb') as f:
+                  .format(it * 1.0 * PRINT_FREQ / data_size * BATCH_SIZE,
+                          avg_cost / PRINT_FREQ))
+            netname = 'epoch-{:.5f}.pkl' \
+                .format(it * 1.0 * PRINT_FREQ / data_size * BATCH_SIZE)
+            with open('nets/' + netname, 'wb') as f:
                 pickle.dump(lasagne.layers.get_all_param_values(l_out), f)
 
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == '__main__':
     main()
